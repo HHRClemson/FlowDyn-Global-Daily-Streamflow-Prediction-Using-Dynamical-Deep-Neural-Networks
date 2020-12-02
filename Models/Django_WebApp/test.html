@@ -1,0 +1,542 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+		<meta charset="utf-8" />
+    <title>Prediction Map</title>
+
+
+		<!-- include leaflet css and javascript --> 
+		<link rel="stylesheet" crossorigin="" href="https://unpkg.com/leaflet@1.0.3/dist/leaflet.css" />
+	  <!-- Load Leaflet code library - see updates at http://leafletjs.com/download.html -->
+      <link rel="stylesheet" href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"/>
+      <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script> 
+    
+      <!-- Load jQuery and PapaParse to read data from a CSV file -->
+    
+      
+      <script src="https://code.jquery.com/jquery-3.5.1.min.js"></script>
+      <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
+    
+
+		<style type="text/css">
+		 #map {
+      float: left;
+  padding: 0px 12px;
+  border: 1px solid #ccc;
+  width: 90%;
+  border-left: none;
+  height: 300px }
+        </style>
+        <style>
+                * {box-sizing: border-box}
+                body {font-family: "Lato", sans-serif;}
+                
+                /* Style the tab */
+                .tab {
+                  float: left;
+                  border: 1px solid #ccc;
+                  background-color: #f1f1f1;
+                  width: 10%;
+                  height: 300px;
+                }
+                
+                /* Style the buttons inside the tab */
+                .tab button {
+                  display: block;
+                  background-color: rgb(98, 98, 255);
+                  color: black;
+                  padding: 22px 6px;
+                  width: 100%;
+                  border: none;
+                  outline: none;
+                  text-align: left;
+                  cursor: pointer;
+                  transition: 0.3s;
+                  font-size: 17px;
+                  color: white;
+                }
+                
+                /* Change background color of buttons on hover */
+                .tab button:hover {
+                  background-color: #ddd;
+                }
+                
+                /* Create an active/current "tab button" class */
+                .tab button.active {
+                  background-color: #ccc;
+                }
+                
+                /* Style the tab content */
+                .tabcontent {
+                  float: left;
+                  padding: 0px 12px;
+                  border: 1px solid #ccc;
+                  width: 90%;
+                  border-left: none;
+                  height: 800px;
+                }
+                .projecttitle{
+                  font-family: Arial, Helvetica, sans-serif;
+                  text-align: center;
+                  color: grey;
+                }
+                #e3 {float: right;}
+                </style>
+	</head>
+
+	<body>
+            <div class="projecttitle">
+            <center></center><h1>Web Platform for Dynamical Streamflow Prediction Using Machine Learning and Deep Learning Methods</h1 ></center>
+          </div>
+          <div>
+          <div  id=e3>
+              <h2>Model Selection</h2> 
+              <input type="radio" id="lstms" name="algo" value="lstms" checked="checked">
+              <label for="lstms">LSTM</label><br>
+              <input type="radio" id="cnn" name="algo" value="cnn">
+              <label for="cnn">Hybrid LSTM-CNN</label><br>
+              <input type="radio" id="mlp" name="algo" value="mlp">
+              <label for="mlp">MLP</label>
+          </div>    
+
+             <div>
+              <h2></br></br></br>Regions</h2>
+  
+           
+            <div class="tab">
+              <button class="tablinks" onclick="openRegion(event, 'na')" >North America</button>
+              <button class="tablinks" onclick="openRegion(event, 'sa')" >South America</button>
+              <button class="tablinks" onclick="openRegion(event, 'af')">Africa</button>
+               <button class="tablinks" onclick="openRegion(event, 'eu')">Europe</button>
+              <button class="tablinks" onclick="openRegion(event, 'as')">Asia</button>
+              <button class="tablinks" onclick="openRegion(event, 'au')">Australia</button> 
+            </div>
+          </div>
+            <div id="sa" class="tabcontent">
+              <h3>South America</h3>
+              
+            </div>
+            
+            <div id="na" class="tabcontent">
+              <h3>North America</h3>
+              <p>Show Map here</p> 
+              
+            </div>
+            
+            <div id="af" class="tabcontent">
+              <h3>Africa</h3>
+              <p>Show Map here</p>
+          
+            </div>
+
+             <div id="eu" class="tabcontent">
+              <h3>Europe</h3>
+              <p>Show Map here</p>
+            </div>
+
+            <div id="as" class="tabcontent" >
+              <h3>Asia</h3>
+              <p>Show Map here</p>
+            </div>  
+
+            <div id="au" class="tabcontent" >
+                    <h3>Australia</h3>
+                    <p>Show Map here</p>
+            </div>
+          </div>
+		<div id="map" ></div>
+
+      
+    <!-- For Australia -->
+    <script>
+
+  // Set up initial map center and zoom level
+  var mapau = L.map('au', {
+    center: [-37.7272, 144.836], // EDIT latitude, longitude to re-center map
+    zoom: 3.14,  // EDIT from 1 to 18 -- decrease to zoom out, increase to zoom in
+    scrollWheelZoom: false
+  });
+
+  
+  /* Control panel to display map layers */
+  var controlLayers = L.control.layers( null, null, {
+    position: "topright",
+    collapsed: false
+  }).addTo(mapau);
+
+  // display Carto basemap tiles with light features and labels
+  var light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+  }).addTo(mapau); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(light, 'Carto Light basemap');
+
+  /* Stamen colored terrain basemap tiles with labels */
+  var terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png', {
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+  }); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(terrain, 'Stamen Terrain basemap');
+
+  // see more basemap options at https://leaflet-extras.github.io/leaflet-providers/preview/
+
+  // Read markers data from data.csv
+  $.get('./aus_data.csv', function(csvString) {
+
+    // Use PapaParse to convert string to array of objects
+    var data = Papa.parse(csvString, {header: true, dynamicTyping: true}).data;
+
+    // For each row in data, create a marker and add it to the map
+    // For each row, columns `Latitude`, `Longitude`, and `Title` are required
+    for (var i in data) {
+      var row = data[i]
+
+      var tb="<table border=0><tr><th>StationID</th><th>"+row.Station_id+"</th></tr><tr><th>NMI</th><th>"+row.NMI+"</th></tr><tr><th>R_Squared</th><th>"+row.R_Squared+"</th></tr><tr><th>MAE</th><th>"+row.MAE+"</th></tr><tr><th>RMSE</th><th>"+row.RMSE+"</th></tr><tr><th>NSE</th><th>"+row.NSE+"</th></tr><tr><th>pBias</th><th>"+row.pBias+"</th></tr></table></br><img src=./images/"+row.Station_id+".png width='600' height='200' />"
+      var marker = L.marker([row.Latitude, row.Longitude], {
+        opacity: 1
+      }).bindPopup(tb, {maxWidth:"auto"})
+      
+      marker.addTo(mapau)
+    }
+    
+  })
+</script>
+<!-- For Africa -->
+<script>
+
+        // Set up initial map center and zoom level
+        var mapaf = L.map('af', {
+          center: [-33.93, 18.42], // EDIT latitude, longitude to re-center map
+          zoom: 3.14,  // EDIT from 1 to 18 -- decrease to zoom out, increase to zoom in
+          scrollWheelZoom: false
+        });
+      
+        /* Control panel to display map layers */
+        var controlLayers = L.control.layers( null, null, {
+          position: "topright",
+          collapsed: false
+        }).addTo(mapaf);
+      
+        // display Carto basemap tiles with light features and labels
+        var light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+        }).addTo(mapaf); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+        controlLayers.addBaseLayer(light, 'Carto Light basemap');
+      
+        /* Stamen colored terrain basemap tiles with labels */
+        var terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png', {
+          attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+        }); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+        controlLayers.addBaseLayer(terrain, 'Stamen Terrain basemap');
+      
+        // see more basemap options at https://leaflet-extras.github.io/leaflet-providers/preview/
+      
+        // Read markers data from data.csv
+        $.get('./Africa_Pawan.csv', function(csvString) {
+      
+          // Use PapaParse to convert string to array of objects
+          var data = Papa.parse(csvString, {header: true, dynamicTyping: true}).data;
+      
+          // For each row in data, create a marker and add it to the map
+          // For each row, columns `Latitude`, `Longitude`, and `Title` are required
+          
+          for (var i in data) {
+            var row = data[i]
+          
+          if(document.getElementById('lstms').checked) {
+            
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>LSTM Modelling Result</td><td><img src=."+row.LSTM_Modelling+" width='600' height='200'/> </td></tr><tr><td>LSTM Prediction Result</td><td><img src=."+row.LSTM_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }else if(document.getElementById('cnn').checked) {
+            
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>Hybrid CNN-LSTM Modelling Result</td><td><img src=."+row.CNN_Modelling+" width='600' height='200'/> </td></tr><tr><td>Hybrid CNN-LSTM Prediction Result</td><td><img src=."+row.CNN_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }else{
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>MLP Modelling Result</td><td><img src=."+row.MLP_Modelling+" width='600' height='200'/> </td></tr><tr><td>MLP Prediction Result</td><td><img src=."+row.MLP_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }
+          
+          var marker = L.marker([row.Latitude, row.Longitude], {
+              opacity: 1
+            }).bindPopup(tb, {maxWidth:"auto"})
+            ;
+            marker.addTo(mapaf)
+          }
+          
+        })
+      </script>
+
+  <!-- For Asia -->
+<script>
+
+  // Set up initial map center and zoom level
+  var mapasia = L.map('as', {
+    center: [37.83, 65.25], // EDIT latitude, longitude to re-center map
+    zoom: 2.5,  // EDIT from 1 to 18 -- decrease to zoom out, increase to zoom in
+    scrollWheelZoom: false
+  });
+
+  
+  /* Control panel to display map layers */
+  var controlLayers = L.control.layers( null, null, {
+    position: "topright",
+    collapsed: false
+  }).addTo(mapasia);
+  
+  var light = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(mapasia);
+
+
+  // display Carto basemap tiles with light features and labels
+  // var light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  //   attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+  // }).addTo(mapasia); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(light, 'Carto Light basemap');
+
+  /* Stamen colored terrain basemap tiles with labels */
+  var terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png', {
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+  }); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(terrain, 'Stamen Terrain basemap');
+
+  // see more basemap options at https://leaflet-extras.github.io/leaflet-providers/preview/
+
+  // Read markers data from data.csv
+  $.get('./asia_data.csv', function(csvString) {
+
+    // Use PapaParse to convert string to array of objects
+    var data = Papa.parse(csvString, {header: true, dynamicTyping: true}).data;
+
+    // For each row in data, create a marker and add it to the map
+    // For each row, columns `Latitude`, `Longitude`, and `Title` are required
+    for (var i in data) {
+      var row = data[i]
+
+      var tb="<table border=0><tr><th>StationID</th><th>"+row.Station_id+"</th></tr><tr><th>NMI</th><th>"+row.NMI+"</th></tr><tr><th>R_Squared</th><th>"+row.R_Squared+"</th></tr><tr><th>MAE</th><th>"+row.MAE+"</th></tr><tr><th>RMSE</th><th>"+row.RMSE+"</th></tr><tr><th>NSE</th><th>"+row.NSE+"</th></tr><tr><th>pBias</th><th>"+row.pBias+"</th></tr></table></br><img src=./images/"+row.Station_id+".png width='600' height='200' />"
+      var marker = L.marker([row.Latitude, row.Longitude], {
+        opacity: 1
+      }).bindPopup(tb, {maxWidth:"auto"})
+      
+      marker.addTo(mapasia)
+    }
+    
+  })
+</script>
+
+<!-- For South America -->
+<script>
+
+  // Set up initial map center and zoom level
+  var mapsa = L.map('sa', {
+    center: [3.82, -51.88], // EDIT latitude, longitude to re-center map
+    zoom: 3.14,  // EDIT from 1 to 18 -- decrease to zoom out, increase to zoom in
+    scrollWheelZoom: false
+  });
+
+  /* Control panel to display map layers */
+  var controlLayers = L.control.layers( null, null, {
+    position: "topright",
+    collapsed: false
+  }).addTo(mapsa);
+
+  // display Carto basemap tiles with light features and labels
+  var light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+  }).addTo(mapsa); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(light, 'Carto Light basemap');
+
+  /* Stamen colored terrain basemap tiles with labels */
+  var terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png', {
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+  }); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(terrain, 'Stamen Terrain basemap');
+
+  // see more basemap options at https://leaflet-extras.github.io/leaflet-providers/preview/
+
+  // Read markers data from data.csv
+  $.get('./South_America_Pawan.csv', function(csvString) {
+
+    // Use PapaParse to convert string to array of objects
+    var data = Papa.parse(csvString, {header: true, dynamicTyping: true}).data;
+
+    // For each row in data, create a marker and add it to the map
+    // For each row, columns `Latitude`, `Longitude`, and `Title` are required
+    for (var i in data) {
+      var row = data[i]
+      if(document.getElementById('lstms').checked) {
+            
+          var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>LSTM Modelling Result</td><td><img src=."+row.LSTM_Modelling+" width='600' height='200'/> </td></tr><tr><td>LSTM Prediction Result</td><td><img src=."+row.LSTM_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }else if(document.getElementById('cnn').checked) {
+            
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>Hybrid CNN-LSTM Modelling Result</td><td><img src=."+row.CNN_Modelling+" width='600' height='200'/> </td></tr><tr><td>Hybrid CNN-LSTM Prediction Result</td><td><img src=."+row.CNN_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }else{
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>MLP Modelling Result</td><td><img src=."+row.MLP_Modelling+" width='600' height='200'/> </td></tr><tr><td>MLP Prediction Result</td><td><img src=."+row.MLP_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }
+            var marker = L.marker([row.Latitude, row.Longitude], {
+              
+            }).bindPopup(tb, {maxWidth:"auto"})
+      
+      marker.addTo(mapsa)
+    }
+    
+  })
+</script>
+
+<!-- For North America -->
+<script>
+
+  // Set up initial map center and zoom level
+  var mapna = L.map('na', {
+    center: [30.7832, -100.5085], // EDIT latitude, longitude to re-center map
+    zoom: 4,  // EDIT from 1 to 18 -- decrease to zoom out, increase to zoom in
+    scrollWheelZoom: false
+  });
+
+  /* Control panel to display map layers */
+  var controlLayers = L.control.layers( null, null, {
+    position: "topright",
+    collapsed: false
+  }).addTo(mapna);
+
+  // display Carto basemap tiles with light features and labels
+  var light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+  }).addTo(mapna); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(light, 'Carto Light basemap');
+
+  /* Stamen colored terrain basemap tiles with labels */
+  var terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png', {
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+  }); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(terrain, 'Stamen Terrain basemap');
+
+  // see more basemap options at https://leaflet-extras.github.io/leaflet-providers/preview/
+
+  // Read markers data from data.csv
+  $.get('./USA_Pawan.csv', function(csvString) {
+
+    // Use PapaParse to convert string to array of objects
+    var data = Papa.parse(csvString, {header: true, dynamicTyping: true}).data;
+
+    // For each row in data, create a marker and add it to the map
+    // For each row, columns `Latitude`, `Longitude`, and `Title` are required
+    for (var i in data) {
+      var row = data[i]
+
+      if(document.getElementById('lstms').checked) {
+            
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>LSTM Modelling Result</td><td><img src=."+row.LSTM_Modelling+" width='600' height='200'/> </td></tr><tr><td>LSTM Prediction Result</td><td><img src=."+row.LSTM_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }else if(document.getElementById('cnn').checked) {
+            
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>Hybrid CNN-LSTM Modelling Result</td><td><img src=."+row.CNN_Modelling+" width='600' height='200'/> </td></tr><tr><td>Hybrid CNN-LSTM Prediction Result</td><td><img src=."+row.CNN_Prediction+" width='600' height='200'/> </td></tr><tr><td>Hybrid CNN-LSTM Forecast Result</td><td><img src=."+row.forecast+" width='600' height='200'/> </td></tr></table>"
+    
+            console.log(tb)
+          
+          }else{
+            var tb="<table border=0><tr><td>Station#</td><td>"+row.Station_ID+"</td></tr><tr><td>MLP Modelling Result</td><td><img src=."+row.MLP_Modelling+" width='600' height='200'/> </td></tr><tr><td>MLP Prediction Result</td><td><img src=."+row.MLP_Prediction+" width='600' height='200'/> </td></tr></table>"
+            
+          }
+      var marker = L.marker([row.Latitude, row.Longitude], {
+        opacity: 1
+      }).bindPopup(tb, {maxWidth:"auto"})
+      
+      marker.addTo(mapna)
+    }
+    
+  })
+</script>
+
+<!-- For Europe -->
+<script>
+
+  // Set up initial map center and zoom level
+  var mapeu = L.map('eu', {
+    center: [56.1, 14.12], // EDIT latitude, longitude to re-center map
+    zoom: 3.14,  // EDIT from 1 to 18 -- decrease to zoom out, increase to zoom in
+    scrollWheelZoom: false
+  });
+
+  /* Control panel to display map layers */
+  var controlLayers = L.control.layers( null, null, {
+    position: "topright",
+    collapsed: false
+  }).addTo(mapeu);
+
+  // display Carto basemap tiles with light features and labels
+  var light = L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>, &copy; <a href="https://carto.com/attribution">CARTO</a>'
+  }).addTo(mapeu); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(light, 'Carto Light basemap');
+
+  /* Stamen colored terrain basemap tiles with labels */
+  var terrain = L.tileLayer('https://stamen-tiles.a.ssl.fastly.net/terrain/{z}/{x}/{y}.png', {
+    attribution: 'Map tiles by <a href="http://stamen.com">Stamen Design</a>, under <a href="http://creativecommons.org/licenses/by/3.0">CC BY 3.0</a>. Data by <a href="http://openstreetmap.org">OpenStreetMap</a>, under <a href="http://www.openstreetmap.org/copyright">ODbL</a>.'
+  }); // EDIT - insert or remove ".addTo(map)" before last semicolon to display by default
+  controlLayers.addBaseLayer(terrain, 'Stamen Terrain basemap');
+
+  // see more basemap options at https://leaflet-extras.github.io/leaflet-providers/preview/
+
+  // Read markers data from data.csv
+  $.get('./europe_data.csv', function(csvString) {
+
+    // Use PapaParse to convert string to array of objects
+    var data = Papa.parse(csvString, {header: true, dynamicTyping: true}).data;
+
+    // For each row in data, create a marker and add it to the map
+    // For each row, columns `Latitude`, `Longitude`, and `Title` are required
+    for (var i in data) {
+      var row = data[i]
+
+      var tb="<table border=0><tr><th>StationID</th><th>"+row.Station_id+"</th></tr><tr><th>NMI</th><th>"+row.NMI+"</th></tr><tr><th>R_Squared</th><th>"+row.R_Squared+"</th></tr><tr><th>MAE</th><th>"+row.MAE+"</th></tr><tr><th>RMSE</th><th>"+row.RMSE+"</th></tr><tr><th>NSE</th><th>"+row.NSE+"</th></tr><tr><th>pBias</th><th>"+row.pBias+"</th></tr></table></br><img src=./images/"+row.Station_id+".png width='600' height='200' />"
+      var marker = L.marker([row.Latitude, row.Longitude], {
+        opacity: 1
+      }).bindPopup(tb, {maxWidth:"auto"})
+      
+      marker.addTo(mapeu)
+    }
+    
+  })
+</script>
+
+
+<script>
+  let buttons = document.getElementsByName('algo');
+  for(let i = 0; i < buttons.length; i++) {
+    buttons[i].addEventListener('click', _ => location.reload());
+  }
+  
+  $(function() {
+    $("input[type=\"radio\"]").click(function(){
+        value=$(this).attr("value")
+        localStorage.setItem("option", value);
+    });
+    var itemValue = localStorage.getItem("option");
+    if (itemValue !== null) {
+      $("#"+itemValue).prop("checked", true);
+    }
+});
+
+  
+  function openRegion(evt, regionName) {
+      window.setTimeout(function(){window.map.invalidateSize();}, 100);
+      var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tabcontent");
+    for (i = 0; i < tabcontent.length; i++) {
+      tabcontent[i].style.display = "none";
+    }
+    tablinks = document.getElementsByClassName("tablinks");
+    for (i = 0; i < tablinks.length; i++) {
+      tablinks[i].className = tablinks[i].className.replace(" active", "");
+    }
+    document.getElementById(regionName).style.display = "block";
+    evt.currentTarget.className += " active";
+    // document.getElementById("content").innerHTML='<object type="text/html" data="./demo.html" ></object>';
+    
+  }
+  // document.getElementById("defaultOpen").click();
+  </script>
+	</body>
+</html>
