@@ -6,9 +6,10 @@
 ### Contributors: 
     Sadegh Sadeghi Tabas
     Nushrat Humaira 
-    Pawan Madanan
-    Siddish P Rao
-    Meghan Patil
+    
+### Supervisors:
+Dr. Vidya Samadi
+Dr. Nina Hubig
 
 ### Project Description: 
     In this research a number of data driven (machine learning and deep learning) and data mining methods
