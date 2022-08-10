@@ -3,8 +3,6 @@
 @author: Nushrat
 """
 
-
-
 import numpy as np
 
 import tensorflow as tf
@@ -144,7 +142,6 @@ def invert_scale(scaler, X, value):
         new_row = new_row+[i for i in x]
 
             
-
     new_row.append(value) 
 
     new_row_2 = np.array(new_row)
@@ -290,9 +287,6 @@ print(type(data[1][6]))
 def build_model():    
 
 
-
-
-
     features = 7
 
 
@@ -324,12 +318,9 @@ def build_model():
     print(np.shape(test))
 
 
-
-
     # transform the scale of the data
 
     scaler, train_scaled, test_scaled = scale(train, test)
-
 
 
     # divide train into train and valid
@@ -362,8 +353,6 @@ def build_model():
     x_test = x_test.reshape(x_test.shape[0],5,features)
 
     print(x_train.shape, y_train.shape,x_valid.shape,y_valid.shape, x_test.shape, y_test.shape)
-
-
 
 
 
@@ -407,10 +396,6 @@ def build_model():
     trained_encoder = AE.layers[0]
 
     weights = AE.layers[0].get_weights()
-
-
-
-
 
 
 
@@ -519,11 +504,7 @@ def build_model():
 
     print('==============================')
     
-    
-
     return {'loss': rmse_valid, 'status': STATUS_OK}
-
-
 
 
 build_model()
