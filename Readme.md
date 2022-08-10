@@ -1,7 +1,7 @@
 ## CPSC8810 - Mining Massive Data Project
 
 ### Project Title: 
-    A Web Platform for Dynamical Streamflow Prediction Using Machine Learning and Deep Learning Methods
+    FlowDyn: Global Daily Streamflow Prediction Using Dynamical Deep Neural Networks
 
 ### Contributors: 
     Sadegh Sadeghi Tabas
