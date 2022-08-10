@@ -8,7 +8,7 @@
     Nushrat Humaira 
     
 ### Supervisors:
-Dr. Vidya Samadi
+Dr. Vidya Samadi &
 Dr. Nina Hubig
 
 ### Project Description: 
